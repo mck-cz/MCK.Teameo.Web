@@ -1,0 +1,8 @@
+
+Role	Email	Heslo
+Admin	admin@teameo.cz	změňteHeslo123!
+Trenér 1	trener@teameo.test	změňteHeslo123!
+Trenér 2	trener2@teameo.test	změňteHeslo123!
+Rodič 1	rodic@teameo.test	změňteHeslo123!
+Rodič 2	rodic2@teameo.test	změňteHeslo123!
+Teenager	adam@teameo.test	změňteHeslo123!

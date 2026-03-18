@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -v)",
+      "Bash(composer --version)",
+      "Bash(npm -v)",
+      "Bash(composer create-project:*)",
+      "Bash(touch database/database.sqlite)",
+      "Bash(php artisan:*)",
+      "Bash(composer require:*)",
+      "Bash(npm run:*)",
+      "Bash(php -l:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(bash /tmp/*.sh)",
+      "Read(//c/Development/MCK.Teameo.Web/src/**)",
+      "Bash(gh auth:*)",
+      "Bash(where gh:*)",
+      "Bash(git config:*)",
+      "Bash(git credential-manager:*)",
+      "Bash(cmdkey /list)"
+    ]
+  }
+}
