@@ -3,11 +3,10 @@
 @section('title', __('messages.messages.new_message'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('messages.index') }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.messages.title'), 'href' => route('messages.index')],
+        ['label' => __('messages.messages.new_message')],
+    ]" />
 
     <h1 class="text-2xl font-semibold mb-6">{{ __('messages.messages.new_message') }}</h1>
 

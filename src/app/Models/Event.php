@@ -35,6 +35,8 @@ class Event extends Model
         'rescheduled_to',
         'cancelled_by',
         'cancelled_at',
+        'completed_at',
+        'completed_by',
     ];
 
     protected function casts(): array
@@ -45,7 +47,58 @@ class Event extends Model
             'rsvp_deadline' => 'datetime',
             'nomination_deadline' => 'datetime',
             'cancelled_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Compute effective status based on time threshold from club settings.
+     * scheduled → in_progress (when within threshold before start)
+     * scheduled → past (when event has ended but not completed)
+     */
+    public function getEffectiveStatusAttribute(): string
+    {
+        if (in_array($this->status, ['cancelled', 'completed'])) {
+            return $this->status;
+        }
+
+        $club = $this->relationLoaded('club') ? $this->club : Club::find($this->club_id);
+        $minutesBefore = $club?->settings['event_in_progress_minutes'] ?? 60;
+
+        $inProgressAt = $this->starts_at->copy()->subMinutes($minutesBefore);
+        $endsAt = $this->ends_at ?? $this->starts_at->copy()->addHours(2);
+
+        if (now()->gte($endsAt)) {
+            return 'past';
+        }
+
+        if (now()->gte($inProgressAt)) {
+            return 'in_progress';
+        }
+
+        return 'scheduled';
+    }
+
+    /**
+     * Check if attendance can be recorded (event is in_progress, past, or completed).
+     */
+    public function getCanRecordAttendanceAttribute(): bool
+    {
+        return in_array($this->effective_status, ['in_progress', 'past', 'completed']);
+    }
+
+    /**
+     * Check if attendance has been fully recorded.
+     */
+    public function getAttendanceRecordedAttribute(): bool
+    {
+        if ($this->relationLoaded('attendances')) {
+            return $this->attendances->isNotEmpty()
+                && $this->attendances->every(fn ($a) => $a->actual_status !== null);
+        }
+
+        return $this->attendances()->whereNotNull('actual_status')->exists()
+            && !$this->attendances()->whereNull('actual_status')->exists();
     }
 
     public function club(): BelongsTo

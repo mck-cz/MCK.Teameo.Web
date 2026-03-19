@@ -19,6 +19,16 @@ class TeamMembership extends Model
         'role',
         'status',
         'position',
+        'jersey_number',
+        'federation_id',
+        'federation_status',
+        'federation_registered_at',
+        'federation_membership_valid_until',
+        'federation_link_type',
+        'federation_external_url',
+        'license_type',
+        'license_valid_until',
+        'attendance_required',
         'joined_at',
     ];
 
@@ -26,6 +36,10 @@ class TeamMembership extends Model
     {
         return [
             'joined_at' => 'datetime',
+            'federation_registered_at' => 'date',
+            'federation_membership_valid_until' => 'date',
+            'license_valid_until' => 'date',
+            'attendance_required' => 'boolean',
         ];
     }
 

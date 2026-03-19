@@ -6,6 +6,7 @@ use App\Models\Album;
 use App\Models\Photo;
 use App\Models\Team;
 use App\Models\TeamMembership;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -73,7 +74,7 @@ class AlbumController extends Controller
             'caption' => 'nullable|string|max:255',
         ]);
 
-        $path = $request->file('photo')->store('albums/' . $album->id, 'public');
+        $path = ImageService::store($request->file('photo'), 'albums/' . $album->id, 1920, 1920, 80);
 
         Photo::create([
             'album_id' => $album->id,

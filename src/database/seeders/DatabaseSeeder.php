@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             TeamSeeder::class,
             VenueSeeder::class,
             EventSeeder::class,
+            LookupSeeder::class,
+            CustomFieldSeeder::class,
+            ConsentSeeder::class,
         ]);
 
         $this->command->info('Testovací data vytvořena.');

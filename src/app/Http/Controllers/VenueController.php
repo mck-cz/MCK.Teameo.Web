@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClubMembership;
+use App\Models\TeamMembership;
 use App\Models\Venue;
 use Illuminate\Http\Request;
 
@@ -23,14 +24,14 @@ class VenueController extends Controller
 
     public function create()
     {
-        $this->authorizeClubAdmin();
+        $this->authorizeCoachOrAdmin();
 
         return view('venues.create');
     }
 
     public function store(Request $request)
     {
-        $this->authorizeClubAdmin();
+        $this->authorizeCoachOrAdmin();
 
         $clubId = session('current_club_id');
 
@@ -55,7 +56,7 @@ class VenueController extends Controller
 
     public function edit(Venue $venue)
     {
-        $this->authorizeClubAdmin();
+        $this->authorizeCoachOrAdmin();
 
         $clubId = session('current_club_id');
         abort_unless($venue->club_id === $clubId, 403);
@@ -65,7 +66,7 @@ class VenueController extends Controller
 
     public function update(Request $request, Venue $venue)
     {
-        $this->authorizeClubAdmin();
+        $this->authorizeCoachOrAdmin();
 
         $clubId = session('current_club_id');
         abort_unless($venue->club_id === $clubId, 403);
@@ -100,13 +101,39 @@ class VenueController extends Controller
         return redirect()->route('venues.index')->with('success', __('messages.venues.deleted'));
     }
 
+    private function authorizeCoachOrAdmin(): void
+    {
+        $clubId = session('current_club_id');
+        $userId = auth()->id();
+
+        $isAdmin = ClubMembership::where('club_id', $clubId)
+            ->where('user_id', $userId)
+            ->whereIn('role', ['owner', 'admin'])
+            ->where('status', 'active')
+            ->exists();
+
+        if ($isAdmin) {
+            return;
+        }
+
+        $isCoach = TeamMembership::where('user_id', $userId)
+            ->whereHas('team', fn($q) => $q->where('club_id', $clubId))
+            ->whereIn('role', ['head_coach', 'assistant_coach'])
+            ->where('status', 'active')
+            ->exists();
+
+        abort_unless($isCoach, 403);
+    }
+
     private function authorizeClubAdmin(): void
     {
         $clubId = session('current_club_id');
-        $membership = ClubMembership::where('club_id', $clubId)
+        $exists = ClubMembership::where('club_id', $clubId)
             ->where('user_id', auth()->id())
-            ->first();
+            ->whereIn('role', ['owner', 'admin'])
+            ->where('status', 'active')
+            ->exists();
 
-        abort_unless($membership && in_array($membership->role, ['owner', 'admin']), 403);
+        abort_unless($exists, 403);
     }
 }

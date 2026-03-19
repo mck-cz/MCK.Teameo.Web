@@ -3,11 +3,10 @@
 @section('title', __('messages.payments.create'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('payments.index') }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.payments.title'), 'href' => route('payments.index')],
+        ['label' => __('messages.payments.create')],
+    ]" />
 
     <h1 class="text-xl font-semibold mb-6">{{ __('messages.payments.create') }}</h1>
 

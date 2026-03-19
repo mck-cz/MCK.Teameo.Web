@@ -3,11 +3,10 @@
 @section('title', $otherParticipant?->user?->full_name ?? __('messages.messages.title'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('messages.index') }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.messages.title'), 'href' => route('messages.index')],
+        ['label' => $otherParticipant?->user?->full_name ?? __('messages.messages.unknown_user')],
+    ]" />
 
     <div class="mb-6">
         <div class="flex items-center gap-3">

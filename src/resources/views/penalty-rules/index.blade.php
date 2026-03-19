@@ -9,7 +9,9 @@
 
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold">{{ __('messages.penalties.title') }}</h1>
-        <a href="{{ route('penalty-rules.create') }}" class="btn-primary text-sm">{{ __('messages.penalties.create') }}</a>
+        @if($isClubAdmin)
+            <a href="{{ route('penalty-rules.create') }}" class="btn-primary text-sm">{{ __('messages.penalties.create') }}</a>
+        @endif
     </div>
 
     @forelse($rules as $rule)
@@ -46,22 +48,24 @@
                             @endif
                         </p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <form action="{{ route('penalty-rules.toggle', $rule) }}" method="POST" class="inline">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="btn-ghost text-sm">
-                                {{ $rule->is_active ? __('messages.penalties.deactivate') : __('messages.penalties.activate') }}
-                            </button>
-                        </form>
-                        <a href="{{ route('penalty-rules.edit', $rule) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
-                        <form action="{{ route('penalty-rules.destroy', $rule) }}" method="POST"
-                            onsubmit="return confirm('{{ __('messages.penalties.delete_confirm') }}')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn-ghost text-sm text-danger">{{ __('messages.common.delete') }}</button>
-                        </form>
-                    </div>
+                    @if($isClubAdmin)
+                        <div class="flex items-center gap-2">
+                            <form action="{{ route('penalty-rules.toggle', $rule) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn-ghost text-sm">
+                                    {{ $rule->is_active ? __('messages.penalties.deactivate') : __('messages.penalties.activate') }}
+                                </button>
+                            </form>
+                            <a href="{{ route('penalty-rules.edit', $rule) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
+                            <form action="{{ route('penalty-rules.destroy', $rule) }}" method="POST"
+                                onsubmit="return confirm('{{ __('messages.penalties.delete_confirm') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-ghost text-sm text-danger">{{ __('messages.common.delete') }}</button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

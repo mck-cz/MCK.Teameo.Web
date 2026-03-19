@@ -19,6 +19,7 @@ class MemberPayment extends Model
         'child_id',
         'variable_symbol',
         'amount',
+        'paid_amount',
         'status',
         'paid_at',
         'confirmed_by',
@@ -31,9 +32,15 @@ class MemberPayment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'paid_amount' => 'decimal:2',
             'paid_at' => 'datetime',
             'thanked_at' => 'datetime',
         ];
+    }
+
+    public function getRemainingAttribute(): float
+    {
+        return (float) $this->amount - (float) $this->paid_amount;
     }
 
     public function paymentRequest(): BelongsTo

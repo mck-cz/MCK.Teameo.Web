@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\ClubMembership;
+use App\Models\Event;
+use App\Models\MemberClaimRequest;
 use App\Models\Season;
 use App\Models\Team;
 use App\Models\TeamMembership;
 use App\Models\User;
+use App\Models\UserGuardian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,8 +33,11 @@ class TeamController extends Controller
         $query = Team::where('club_id', $clubId);
 
         if (!$isClubAdmin) {
-            $query->whereHas('teamMemberships', function ($q) use ($userId) {
-                $q->where('user_id', $userId)
+            $childIds = Auth::user()->getChildrenIdsInClub($clubId);
+            $relevantUserIds = collect([$userId])->merge($childIds);
+
+            $query->whereHas('teamMemberships', function ($q) use ($relevantUserIds) {
+                $q->whereIn('user_id', $relevantUserIds)
                     ->where('status', 'active');
             });
         }
@@ -56,7 +63,7 @@ class TeamController extends Controller
         $team->load([
             'teamMemberships' => function ($query) {
                 $query->where('status', 'active')
-                    ->with('user')
+                    ->with(['user.guardians.guardian'])
                     ->orderByRaw("CASE role WHEN 'head_coach' THEN 1 WHEN 'assistant_coach' THEN 2 WHEN 'athlete' THEN 3 ELSE 4 END")
                     ->orderBy('joined_at');
             },
@@ -86,7 +93,27 @@ class TeamController extends Controller
         $canEdit = $isClubAdmin || $isHeadCoach;
         $canDelete = $isClubAdmin;
 
-        return view('teams.show', compact('team', 'upcomingEvents', 'canEdit', 'canDelete'));
+        // Check if user is a direct member of this team (not just viewing via child)
+        $isDirectMember = TeamMembership::where('team_id', $team->id)
+            ->where('user_id', $userId)
+            ->where('status', 'active')
+            ->exists();
+
+        // Load pending claim requests for placeholder members (for guardian invite status)
+        $placeholderIds = $team->teamMemberships
+            ->filter(fn ($m) => $m->user->status === 'placeholder')
+            ->pluck('user.id');
+
+        $pendingClaims = collect();
+        if ($placeholderIds->isNotEmpty()) {
+            $pendingClaims = MemberClaimRequest::whereIn('placeholder_id', $placeholderIds)
+                ->where('team_id', $team->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->keyBy('placeholder_id');
+        }
+
+        return view('teams.show', compact('team', 'upcomingEvents', 'canEdit', 'canDelete', 'isDirectMember', 'pendingClaims'));
     }
 
     /**
@@ -95,6 +122,7 @@ class TeamController extends Controller
     public function create()
     {
         $clubId = session('current_club_id');
+        $this->authorizeClubAdmin();
 
         $seasons = Season::where('club_id', $clubId)
             ->orderBy('start_date', 'desc')
@@ -109,6 +137,7 @@ class TeamController extends Controller
     public function store(Request $request)
     {
         $clubId = session('current_club_id');
+        $this->authorizeClubAdmin();
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -271,13 +300,26 @@ class TeamController extends Controller
             return back()->withErrors(['email' => __('messages.teams.already_member')]);
         }
 
-        TeamMembership::create([
+        $membership = TeamMembership::create([
             'team_id' => $team->id,
             'user_id' => $user->id,
             'role' => $request->input('role'),
             'status' => 'active',
             'joined_at' => now(),
         ]);
+
+        // Auto-create attendance records for future scheduled events of this team
+        $futureEvents = Event::where('team_id', $team->id)
+            ->where('starts_at', '>', now())
+            ->where('status', 'scheduled')
+            ->get();
+
+        foreach ($futureEvents as $event) {
+            Attendance::firstOrCreate(
+                ['event_id' => $event->id, 'team_membership_id' => $membership->id],
+                ['rsvp_status' => 'pending'],
+            );
+        }
 
         return back()->with('success', __('messages.teams.member_added'));
     }
@@ -295,7 +337,19 @@ class TeamController extends Controller
         $validated = $request->validate([
             'role' => 'sometimes|in:head_coach,assistant_coach,athlete',
             'position' => 'nullable|string|max:100',
+            'jersey_number' => 'nullable|integer|min:0|max:999',
+            'federation_id' => 'nullable|string|max:100',
+            'federation_status' => 'nullable|in:amateur,professional,recreational,youth',
+            'federation_registered_at' => 'nullable|date',
+            'federation_membership_valid_until' => 'nullable|date',
+            'federation_link_type' => 'nullable|in:facr,cfbu,csp,cus,custom',
+            'federation_external_url' => 'nullable|url|max:500',
+            'license_type' => 'nullable|string|max:50',
+            'license_valid_until' => 'nullable|date',
+            'attendance_required' => 'sometimes|boolean',
         ]);
+
+        $validated['attendance_required'] = $request->boolean('attendance_required');
 
         $membership->update($validated);
 

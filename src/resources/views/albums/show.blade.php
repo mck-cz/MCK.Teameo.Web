@@ -7,9 +7,10 @@
         <div class="alert-success mb-4">{{ session('success') }}</div>
     @endif
 
-    <div class="mb-4">
-        <a href="{{ route('albums.index') }}" class="text-sm text-muted hover:underline">&larr; {{ __('messages.common.back') }}</a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.albums.title'), 'href' => route('albums.index')],
+        ['label' => $album->title],
+    ]" />
 
     <div class="flex items-center justify-between mb-6">
         <div>

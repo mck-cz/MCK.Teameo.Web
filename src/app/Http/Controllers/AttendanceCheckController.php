@@ -14,6 +14,9 @@ class AttendanceCheckController extends Controller
         $clubId = session('current_club_id');
         abort_unless($event->club_id === $clubId, 403);
 
+        // Only allow attendance for events that are in_progress, past, or completed
+        abort_unless($event->can_record_attendance, 403);
+
         // Verify user is coach of this team
         $isCoach = TeamMembership::where('user_id', auth()->id())
             ->where('team_id', $event->team_id)
@@ -44,6 +47,9 @@ class AttendanceCheckController extends Controller
         $clubId = session('current_club_id');
         abort_unless($event->club_id === $clubId, 403);
 
+        // Only allow attendance for events that are in_progress, past, or completed
+        abort_unless($event->can_record_attendance, 403);
+
         $isCoach = TeamMembership::where('user_id', auth()->id())
             ->where('team_id', $event->team_id)
             ->whereIn('role', ['head_coach', 'assistant_coach'])
@@ -60,11 +66,22 @@ class AttendanceCheckController extends Controller
         $attendanceData = $request->input('attendance', []);
 
         foreach ($event->attendances as $attendance) {
-            $status = $attendanceData[$attendance->id] ?? 'absent';
+            if (!array_key_exists($attendance->id, $attendanceData)) {
+                continue;
+            }
             $attendance->update([
-                'actual_status' => $status,
+                'actual_status' => $attendanceData[$attendance->id],
                 'checked_by' => auth()->id(),
                 'checked_at' => now(),
+            ]);
+        }
+
+        // Auto-complete event after attendance is recorded
+        if ($event->status !== 'completed') {
+            $event->update([
+                'status' => 'completed',
+                'completed_by' => auth()->id(),
+                'completed_at' => now(),
             ]);
         }
 

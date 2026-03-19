@@ -39,4 +39,9 @@ class TeamPost extends Model
     {
         return $this->hasMany(PollOption::class, 'post_id');
     }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TeamPostAttachment::class, 'post_id');
+    }
 }

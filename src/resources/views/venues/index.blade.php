@@ -9,7 +9,9 @@
 
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-xl font-semibold">{{ __('messages.venues.title') }}</h1>
-        <a href="{{ route('venues.create') }}" class="btn-primary">{{ __('messages.venues.create') }}</a>
+        @if($isClubAdmin || $isCoachInClub)
+            <a href="{{ route('venues.create') }}" class="btn-primary">{{ __('messages.venues.create') }}</a>
+        @endif
     </div>
 
     @if($venues->isEmpty())
@@ -52,15 +54,19 @@
                         @if($venue->notes)
                             <p class="text-sm text-muted mb-3">{{ $venue->notes }}</p>
                         @endif
-                        <div class="flex gap-2">
-                            <a href="{{ route('venues.edit', $venue) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
-                            <form action="{{ route('venues.destroy', $venue) }}" method="POST"
-                                onsubmit="return confirm('{{ __('messages.venues.delete_confirm') }}')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-ghost text-danger text-sm">{{ __('messages.common.delete') }}</button>
-                            </form>
-                        </div>
+                        @if($isClubAdmin || $isCoachInClub)
+                            <div class="flex gap-2">
+                                <a href="{{ route('venues.edit', $venue) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
+                                @if($isClubAdmin)
+                                    <form action="{{ route('venues.destroy', $venue) }}" method="POST"
+                                        onsubmit="return confirm('{{ __('messages.venues.delete_confirm') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-ghost text-danger text-sm">{{ __('messages.common.delete') }}</button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endforeach

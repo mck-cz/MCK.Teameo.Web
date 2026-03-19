@@ -3,10 +3,10 @@
 @section('title', __('messages.events.create_title'))
 
 @section('content')
-    {{-- Back link --}}
-    <div class="mb-4">
-        <a href="{{ route('events.index') }}" class="text-sm text-muted hover:underline">&larr; {{ __('messages.common.back') }}</a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.events.title'), 'href' => route('events.index')],
+        ['label' => __('messages.events.create_title')],
+    ]" />
 
     <div class="mb-6">
         <h1 class="text-xl font-semibold">{{ __('messages.events.create_title') }}</h1>

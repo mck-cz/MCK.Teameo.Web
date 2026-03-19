@@ -7,6 +7,7 @@ use App\Models\MemberPayment;
 use App\Models\PaymentRequest;
 use App\Models\Team;
 use App\Models\TeamMembership;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class PaymentRequestController extends Controller
@@ -110,6 +111,23 @@ class PaymentRequestController extends Controller
         // Generate member payments
         $this->generateMemberPayments($paymentRequest);
 
+        // Notify all members who received a payment
+        $paymentUserIds = MemberPayment::where('payment_request_id', $paymentRequest->id)
+            ->where('user_id', '!=', auth()->id())
+            ->pluck('user_id')
+            ->toArray();
+
+        if (!empty($paymentUserIds)) {
+            NotificationService::send(
+                $paymentUserIds,
+                'new_payment',
+                __('messages.notifications_msg.new_payment', [
+                    'title' => $paymentRequest->name,
+                    'amount' => number_format($paymentRequest->amount, 0, ',', ' ') . ' ' . $paymentRequest->currency,
+                ])
+            );
+        }
+
         return redirect()->route('payments.show', $paymentRequest)
             ->with('success', __('messages.payments.created'));
     }
@@ -193,13 +211,37 @@ class PaymentRequestController extends Controller
         $clubId = session('current_club_id');
         abort_unless($memberPayment->paymentRequest->club_id === $clubId, 403);
 
-        $memberPayment->update([
-            'status' => 'paid',
-            'paid_at' => now(),
-            'confirmed_by' => auth()->id(),
+        $validated = $request->validate([
+            'paid_amount' => ['required', 'numeric', 'min:1', 'max:' . $memberPayment->remaining],
+            'send_thanks' => ['sometimes', 'boolean'],
         ]);
 
-        return back()->with('success', __('messages.payments.payment_confirmed'));
+        $paidAmount = (float) $validated['paid_amount'];
+        $newTotal = (float) $memberPayment->paid_amount + $paidAmount;
+        $isFullyPaid = $newTotal >= (float) $memberPayment->amount;
+
+        $memberPayment->update([
+            'paid_amount' => $newTotal,
+            'status' => $isFullyPaid ? 'paid' : 'partial',
+            'paid_at' => $isFullyPaid ? now() : $memberPayment->paid_at,
+            'confirmed_by' => auth()->id(),
+            'thanked_at' => $request->boolean('send_thanks', true) ? now() : $memberPayment->thanked_at,
+        ]);
+
+        // Notify the member whose payment was confirmed
+        NotificationService::send(
+            $memberPayment->user_id,
+            'payment_confirmed',
+            __('messages.notifications_msg.payment_confirmed', [
+                'title' => $memberPayment->paymentRequest->name,
+            ])
+        );
+
+        $message = $isFullyPaid
+            ? __('messages.payments.payment_confirmed')
+            : __('messages.payments.partial_payment_confirmed', ['amount' => number_format($paidAmount, 0, ',', ' ')]);
+
+        return back()->with('success', $message);
     }
 
     public function cancelPayment(Request $request, MemberPayment $memberPayment)

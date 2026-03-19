@@ -16,7 +16,9 @@
 
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-xl font-semibold">{{ __('messages.seasons.title') }}</h1>
-        <a href="{{ route('seasons.create') }}" class="btn-primary">{{ __('messages.seasons.create') }}</a>
+        @if($isClubAdmin)
+            <a href="{{ route('seasons.create') }}" class="btn-primary">{{ __('messages.seasons.create') }}</a>
+        @endif
     </div>
 
     @if($seasons->isEmpty())
@@ -37,7 +39,9 @@
                                 <th class="pb-2 font-medium">{{ __('messages.seasons.end_date') }}</th>
                                 <th class="pb-2 font-medium">{{ __('messages.seasons.teams_count') }}</th>
                                 <th class="pb-2 font-medium">{{ __('messages.seasons.status') }}</th>
-                                <th class="pb-2 font-medium"></th>
+                                @if($isClubAdmin)
+                                    <th class="pb-2 font-medium"></th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -63,19 +67,21 @@
                                             <span class="badge badge-gray">{{ __('messages.seasons.ended') }}</span>
                                         @endif
                                     </td>
-                                    <td class="py-3 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <a href="{{ route('seasons.edit', $season) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
-                                            @if($season->teams_count === 0)
-                                                <form action="{{ route('seasons.destroy', $season) }}" method="POST"
-                                                    onsubmit="return confirm('{{ __('messages.seasons.delete_confirm') }}')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-ghost text-danger text-sm">{{ __('messages.common.delete') }}</button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </td>
+                                    @if($isClubAdmin)
+                                        <td class="py-3 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <a href="{{ route('seasons.edit', $season) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
+                                                @if($season->teams_count === 0)
+                                                    <form action="{{ route('seasons.destroy', $season) }}" method="POST"
+                                                        onsubmit="return confirm('{{ __('messages.seasons.delete_confirm') }}')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn-ghost text-danger text-sm">{{ __('messages.common.delete') }}</button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>

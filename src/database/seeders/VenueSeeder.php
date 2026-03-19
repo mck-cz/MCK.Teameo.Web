@@ -10,6 +10,7 @@ class VenueSeeder extends Seeder
 {
     public function run(): void
     {
+        // Club 1 venues
         SeederIds::$venueHlavni = Str::uuid()->toString();
         SeederIds::$venueHala   = Str::uuid()->toString();
         SeederIds::$venueUmelka = Str::uuid()->toString();
@@ -56,6 +57,25 @@ class VenueSeeder extends Seeder
             ],
         ]);
 
-        $this->command->info('VenueSeeder: 3 sportoviště vytvořena.');
+        // Club 2 venue
+        SeederIds::$venueStadion2 = Str::uuid()->toString();
+
+        DB::table('venues')->insert([
+            [
+                'id'               => SeederIds::$venueStadion2,
+                'club_id'          => SeederIds::$club2,
+                'name'             => 'Hala UP Olomouc',
+                'address'          => 'Univerzitní sportovní hala, 17. listopadu 6, Olomouc',
+                'latitude'         => 49.5955000,
+                'longitude'        => 17.2518000,
+                'geocoding_source' => null,
+                'sport_type'       => 'basketball',
+                'notes'            => null,
+                'is_favorite'      => true,
+                'sort_order'       => 1,
+            ],
+        ]);
+
+        $this->command->info('VenueSeeder: 4 sportoviště vytvořena.');
     }
 }

@@ -3,11 +3,10 @@
 @section('title', __('messages.seasons.edit'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('seasons.index') }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.seasons.title'), 'href' => route('seasons.index')],
+        ['label' => __('messages.seasons.edit')],
+    ]" />
 
     <h1 class="text-2xl font-semibold mb-6">{{ __('messages.seasons.edit') }}</h1>
 

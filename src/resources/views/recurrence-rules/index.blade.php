@@ -9,7 +9,9 @@
 
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold">{{ __('messages.recurrence.title') }}</h1>
-        <a href="{{ route('recurrence-rules.create') }}" class="btn-primary text-sm">{{ __('messages.recurrence.create') }}</a>
+        @if($isClubAdmin)
+            <a href="{{ route('recurrence-rules.create') }}" class="btn-primary text-sm">{{ __('messages.recurrence.create') }}</a>
+        @endif
     </div>
 
     @if($rules->isEmpty())
@@ -50,22 +52,24 @@
                                     @endif
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0 ml-4">
-                                <a href="{{ route('recurrence-rules.edit', $rule) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
-                                <form action="{{ route('recurrence-rules.toggle', $rule) }}" method="POST">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn-ghost text-sm">
-                                        {{ $rule->is_active ? __('messages.recurrence.deactivate') : __('messages.recurrence.activate') }}
-                                    </button>
-                                </form>
-                                <form action="{{ route('recurrence-rules.destroy', $rule) }}" method="POST"
-                                    onsubmit="return confirm('{{ __('messages.recurrence.delete_confirm') }}')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-ghost text-danger text-sm">{{ __('messages.common.delete') }}</button>
-                                </form>
-                            </div>
+                            @if($isClubAdmin)
+                                <div class="flex items-center gap-2 shrink-0 ml-4">
+                                    <a href="{{ route('recurrence-rules.edit', $rule) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
+                                    <form action="{{ route('recurrence-rules.toggle', $rule) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn-ghost text-sm">
+                                            {{ $rule->is_active ? __('messages.recurrence.deactivate') : __('messages.recurrence.activate') }}
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('recurrence-rules.destroy', $rule) }}" method="POST"
+                                        onsubmit="return confirm('{{ __('messages.recurrence.delete_confirm') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-ghost text-danger text-sm">{{ __('messages.common.delete') }}</button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

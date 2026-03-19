@@ -7,11 +7,10 @@
         <div class="alert-success mb-4">{{ session('success') }}</div>
     @endif
 
-    <div class="mb-6">
-        <a href="{{ route('club-admin.index') }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.club_admin.title'), 'href' => route('club-admin.index')],
+        ['label' => __('messages.club_admin.settings')],
+    ]" />
 
     <h1 class="text-xl font-semibold mb-6">{{ __('messages.club_admin.settings') }}</h1>
 
@@ -63,6 +62,21 @@
                         placeholder="CZ6508000000192000145399"
                         class="form-input @error('bank_account') border-danger @enderror">
                     @error('bank_account')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="event_in_progress_minutes" class="form-label">{{ __('messages.club_admin.event_in_progress_minutes') }}</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="event_in_progress_minutes" id="event_in_progress_minutes"
+                            value="{{ old('event_in_progress_minutes', $club->settings['event_in_progress_minutes'] ?? 60) }}"
+                            min="0" max="1440" step="5"
+                            class="form-input w-32 @error('event_in_progress_minutes') border-danger @enderror">
+                        <span class="text-sm text-muted">{{ __('messages.club_admin.minutes') }}</span>
+                    </div>
+                    <p class="text-xs text-muted mt-1">{{ __('messages.club_admin.event_in_progress_hint') }}</p>
+                    @error('event_in_progress_minutes')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
                 </div>

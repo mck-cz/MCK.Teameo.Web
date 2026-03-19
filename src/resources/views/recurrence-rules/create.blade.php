@@ -3,11 +3,10 @@
 @section('title', __('messages.recurrence.create'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('recurrence-rules.index') }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.recurrence.title'), 'href' => route('recurrence-rules.index')],
+        ['label' => __('messages.recurrence.create')],
+    ]" />
 
     <h1 class="text-xl font-semibold mb-6">{{ __('messages.recurrence.create') }}</h1>
 

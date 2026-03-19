@@ -9,7 +9,9 @@
 
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold">{{ __('messages.venue_costs.title') }}</h1>
-        <a href="{{ route('venue-costs.create') }}" class="btn-primary text-sm">{{ __('messages.venue_costs.create') }}</a>
+        @if($isClubAdmin)
+            <a href="{{ route('venue-costs.create') }}" class="btn-primary text-sm">{{ __('messages.venue_costs.create') }}</a>
+        @endif
     </div>
 
     @forelse($venueCosts as $vc)
@@ -35,15 +37,17 @@
                             {{ __('messages.venue_costs.split_' . $vc->split_method) }} · {{ __('messages.venue_costs.period_' . $vc->billing_period) }}
                         </p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('venue-costs.edit', $vc) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
-                        <form action="{{ route('venue-costs.destroy', $vc) }}" method="POST"
-                            onsubmit="return confirm('{{ __('messages.venue_costs.delete_confirm') }}')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn-ghost text-sm text-danger">{{ __('messages.common.delete') }}</button>
-                        </form>
-                    </div>
+                    @if($isClubAdmin)
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('venue-costs.edit', $vc) }}" class="btn-ghost text-sm">{{ __('messages.common.edit') }}</a>
+                            <form action="{{ route('venue-costs.destroy', $vc) }}" method="POST"
+                                onsubmit="return confirm('{{ __('messages.venue_costs.delete_confirm') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-ghost text-sm text-danger">{{ __('messages.common.delete') }}</button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Generate settlement --}}

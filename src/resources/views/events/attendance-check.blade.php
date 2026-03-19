@@ -3,11 +3,11 @@
 @section('title', __('messages.attendance_check.title'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('events.show', $event) }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.events.title'), 'href' => route('events.index')],
+        ['label' => $event->title, 'href' => route('events.show', $event)],
+        ['label' => __('messages.attendance_check.title')],
+    ]" />
 
     <div class="mb-6">
         <h1 class="text-2xl font-semibold">{{ __('messages.attendance_check.title') }}</h1>

@@ -5,13 +5,32 @@
 @section('content')
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-xl font-semibold">{{ __('messages.events.title') }}</h1>
-        <a href="{{ route('events.create') }}" class="btn-primary">{{ __('messages.events.create') }}</a>
+        @if($isClubAdmin || $isCoachInClub)
+            <a href="{{ route('events.create') }}" class="btn-primary">{{ __('messages.events.create') }}</a>
+        @endif
+    </div>
+
+    {{-- Time filter tabs --}}
+    <div class="flex gap-1 mb-4">
+        <a href="{{ route('events.index', array_merge(request()->except('time'), ['time' => 'upcoming'])) }}"
+            class="px-4 py-2 rounded-lg text-sm transition-colors {{ ($selectedTime ?? 'upcoming') === 'upcoming' ? 'bg-primary text-white' : 'bg-surface text-muted hover:bg-bg' }}">
+            {{ __('messages.events.filter_upcoming') }}
+        </a>
+        <a href="{{ route('events.index', array_merge(request()->except('time'), ['time' => 'past'])) }}"
+            class="px-4 py-2 rounded-lg text-sm transition-colors {{ ($selectedTime ?? 'upcoming') === 'past' ? 'bg-primary text-white' : 'bg-surface text-muted hover:bg-bg' }}">
+            {{ __('messages.events.filter_past') }}
+        </a>
+        <a href="{{ route('events.index', array_merge(request()->except('time'), ['time' => 'all'])) }}"
+            class="px-4 py-2 rounded-lg text-sm transition-colors {{ ($selectedTime ?? 'upcoming') === 'all' ? 'bg-primary text-white' : 'bg-surface text-muted hover:bg-bg' }}">
+            {{ __('messages.events.filter_all') }}
+        </a>
     </div>
 
     {{-- Filter bar --}}
     <div class="card mb-6">
         <div class="card-body">
             <form method="GET" action="{{ route('events.index') }}" class="flex flex-wrap gap-4 items-end">
+                <input type="hidden" name="time" value="{{ $selectedTime ?? 'upcoming' }}">
                 <div>
                     <label for="event_type" class="form-label">{{ __('messages.common.filter') }}</label>
                     <select name="event_type" id="event_type" class="form-select">
@@ -68,9 +87,34 @@
                                 <span class="badge badge-gray">{{ __('messages.events.competition') }}</span>
                                 @break
                         @endswitch
+                        @if($event->effective_status === 'in_progress')
+                            <span class="badge badge-accent">{{ __('messages.events.in_progress') }}</span>
+                        @elseif($event->effective_status === 'completed')
+                            <span class="badge badge-gray">{{ __('messages.events.completed') }}</span>
+                        @elseif($event->effective_status === 'past')
+                            <span class="badge badge-warning">{{ __('messages.events.past_awaiting') }}</span>
+                        @elseif($event->effective_status === 'cancelled')
+                            <span class="badge badge-danger">{{ __('messages.events.cancelled') }}</span>
+                        @endif
+                        @if($event->effective_status === 'past' && !$event->attendance_recorded)
+                            <span class="badge badge-danger">{{ __('messages.events.attendance_missing') }}</span>
+                        @endif
                     </div>
                     <p class="text-sm text-muted mt-1">
                         {{ $event->team->name }}
+                        @if(isset($teamChildMap[$event->team_id]))
+                            @foreach($teamChildMap[$event->team_id] as $childName)
+                                @php
+                                    $childRsvp = $eventChildRsvp[$event->id][$childName] ?? null;
+                                    $badgeClass = match($childRsvp) {
+                                        'confirmed' => 'badge-success',
+                                        'declined' => 'badge-danger',
+                                        default => 'badge-warning',
+                                    };
+                                @endphp
+                                <span class="badge {{ $badgeClass }} text-xs">{{ $childName }}</span>
+                            @endforeach
+                        @endif
                         @if($event->venue)
                             &middot; {{ $event->venue->name }}
                         @endif

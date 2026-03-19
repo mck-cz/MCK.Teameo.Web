@@ -32,6 +32,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PenaltyRuleController;
 use App\Http\Controllers\TeamPostController;
 use App\Http\Controllers\VenueCostController;
+use App\Http\Controllers\CustomFieldController;
+use App\Http\Controllers\PlaceholderMemberController;
 use App\Http\Controllers\VenueController;
 use Illuminate\Support\Facades\Route;
 
@@ -73,6 +75,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/onboarding/join-club', [OnboardingController::class, 'requestJoin']);
 });
 
+// Guardian claim page (public - shows info, requires login to process)
+Route::get('/claim/{token}', [PlaceholderMemberController::class, 'showClaim'])->name('placeholder.show-claim');
+
 // Authenticated + club-scoped routes
 Route::middleware(['auth', 'club.selected'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -89,15 +94,25 @@ Route::middleware(['auth', 'club.selected'])->group(function () {
     Route::patch('/teams/{team}/members/{membership}', [TeamController::class, 'updateMember'])->name('teams.update-member');
     Route::delete('/teams/{team}/members/{membership}', [TeamController::class, 'removeMember'])->name('teams.remove-member');
 
+    // Placeholder members
+    Route::post('/teams/{team}/placeholder', [PlaceholderMemberController::class, 'store'])->name('placeholder.store');
+    Route::post('/teams/{team}/placeholder/{placeholder}/guardian-invite', [PlaceholderMemberController::class, 'sendGuardianInvite'])->name('placeholder.guardian-invite');
+
+    // Claim guardian invite (requires auth)
+    Route::post('/claim/{token}', [PlaceholderMemberController::class, 'processClaim'])->name('placeholder.process-claim');
+
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
+    Route::post('/events/{event}/complete', [EventController::class, 'complete'])->name('events.complete');
+    Route::post('/events/{event}/sync-attendances', [EventController::class, 'syncAttendances'])->name('events.sync-attendances');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::patch('/attendances/{attendance}', [AttendanceController::class, 'update'])->name('attendances.update');
+    Route::post('/attendances/batch', [AttendanceController::class, 'batchUpdate'])->name('attendances.batch');
 
     Route::get('/events/{event}/nominations', [NominationController::class, 'manage'])->name('nominations.manage');
     Route::post('/events/{event}/nominations', [NominationController::class, 'store'])->name('nominations.store');
@@ -187,13 +202,19 @@ Route::middleware(['auth', 'club.selected'])->group(function () {
     // Team Wall & Posts
     Route::get('/teams/{team}/wall', [TeamPostController::class, 'index'])->name('teams.wall');
     Route::post('/teams/{team}/posts', [TeamPostController::class, 'store'])->name('team-posts.store');
+    Route::post('/team-posts/upload', [TeamPostController::class, 'uploadAttachment'])->name('team-posts.upload');
     Route::delete('/team-posts/{teamPost}', [TeamPostController::class, 'destroy'])->name('team-posts.destroy');
     Route::post('/team-posts/{teamPost}/comments', [TeamPostController::class, 'storeComment'])->name('team-post-comments.store');
     Route::post('/poll-options/{pollOption}/vote', [TeamPostController::class, 'vote'])->name('poll-votes.store');
 
     // Consents
     Route::get('/consents', [ConsentTypeController::class, 'index'])->name('consents.index');
+    Route::get('/consents/overview', [ConsentTypeController::class, 'overview'])->name('consents.overview');
+    Route::get('/consent-types/create', [ConsentTypeController::class, 'create'])->name('consent-types.create');
     Route::post('/consent-types', [ConsentTypeController::class, 'store'])->name('consent-types.store');
+    Route::get('/consent-types/{consentType}', [ConsentTypeController::class, 'show'])->name('consent-types.show');
+    Route::get('/consent-types/{consentType}/edit', [ConsentTypeController::class, 'edit'])->name('consent-types.edit');
+    Route::put('/consent-types/{consentType}', [ConsentTypeController::class, 'update'])->name('consent-types.update');
     Route::delete('/consent-types/{consentType}', [ConsentTypeController::class, 'destroy'])->name('consent-types.destroy');
     Route::post('/consents/{consentType}/grant', [ConsentTypeController::class, 'grant'])->name('consents.grant');
     Route::delete('/consents/{consentType}/revoke', [ConsentTypeController::class, 'revoke'])->name('consents.revoke');
@@ -247,6 +268,14 @@ Route::middleware(['auth', 'club.selected'])->group(function () {
     // Event Results
     Route::post('/events/{event}/result', [EventResultController::class, 'store'])->name('event-results.store');
     Route::delete('/event-results/{eventResult}', [EventResultController::class, 'destroy'])->name('event-results.destroy');
+
+    // Custom Fields
+    Route::get('/custom-fields', [CustomFieldController::class, 'index'])->name('custom-fields.index');
+    Route::get('/custom-fields/create', [CustomFieldController::class, 'create'])->name('custom-fields.create');
+    Route::post('/custom-fields', [CustomFieldController::class, 'store'])->name('custom-fields.store');
+    Route::get('/custom-fields/{customField}/edit', [CustomFieldController::class, 'edit'])->name('custom-fields.edit');
+    Route::put('/custom-fields/{customField}', [CustomFieldController::class, 'update'])->name('custom-fields.update');
+    Route::delete('/custom-fields/{customField}', [CustomFieldController::class, 'destroy'])->name('custom-fields.destroy');
 });
 
 // Public iCal feed (no auth required)

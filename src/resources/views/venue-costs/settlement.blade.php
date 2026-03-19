@@ -7,9 +7,11 @@
         <div class="alert-success mb-4">{{ session('success') }}</div>
     @endif
 
-    <div class="mb-6">
-        <a href="{{ route('venue-costs.index') }}" class="text-sm text-muted hover:underline">&larr; {{ __('messages.common.back') }}</a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.venue_costs.title'), 'href' => route('venue-costs.index')],
+        ['label' => $settlement->venueCost->name, 'href' => route('venue-costs.index')],
+        ['label' => __('messages.venue_costs.settlement_detail')],
+    ]" />
 
     <h1 class="text-xl font-semibold mb-6">{{ __('messages.venue_costs.settlement_detail') }}</h1>
 

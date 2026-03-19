@@ -3,11 +3,11 @@
 @section('title', __('messages.teams.edit_title'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('teams.show', $team) }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.teams.title'), 'href' => route('teams.index')],
+        ['label' => $team->name, 'href' => route('teams.show', $team)],
+        ['label' => __('messages.teams.edit_title')],
+    ]" />
 
     <h1 class="text-2xl font-semibold mb-6">{{ __('messages.teams.edit_title') }}</h1>
 

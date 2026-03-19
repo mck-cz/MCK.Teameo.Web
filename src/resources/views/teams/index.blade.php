@@ -5,7 +5,9 @@
 @section('content')
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-xl font-semibold">{{ __('messages.teams.title') }}</h1>
-        <a href="{{ route('teams.create') }}" class="btn-primary">{{ __('messages.teams.create') }}</a>
+        @if($isClubAdmin)
+            <a href="{{ route('teams.create') }}" class="btn-primary">{{ __('messages.teams.create') }}</a>
+        @endif
     </div>
 
     @if($teams->isEmpty())

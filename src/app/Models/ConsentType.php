@@ -17,6 +17,7 @@ class ConsentType extends Model
         'club_id',
         'name',
         'description',
+        'content',
         'is_required',
         'sort_order',
     ];

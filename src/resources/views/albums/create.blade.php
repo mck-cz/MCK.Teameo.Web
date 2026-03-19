@@ -3,9 +3,10 @@
 @section('title', __('messages.albums.create'))
 
 @section('content')
-    <div class="mb-4">
-        <a href="{{ route('albums.index') }}" class="text-sm text-muted hover:underline">&larr; {{ __('messages.common.back') }}</a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.albums.title'), 'href' => route('albums.index')],
+        ['label' => __('messages.albums.create')],
+    ]" />
 
     <h1 class="text-xl font-semibold mb-6">{{ __('messages.albums.create') }}</h1>
 

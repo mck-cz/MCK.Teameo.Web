@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\ClubMembership;
 use App\Models\Event;
 use App\Models\Team;
 use App\Models\TeamMembership;
@@ -14,15 +15,7 @@ class AttendanceStatisticsController extends Controller
     {
         $clubId = session('current_club_id');
 
-        // Get user's teams
-        $myTeamIds = TeamMembership::where('user_id', auth()->id())
-            ->where('status', 'active')
-            ->pluck('team_id');
-
-        $teams = Team::where('club_id', $clubId)
-            ->whereIn('id', $myTeamIds)
-            ->orderBy('name')
-            ->get();
+        $teams = $this->getAccessibleTeams($clubId);
 
         $selectedTeamId = $request->input('team_id', $teams->first()?->id);
         $selectedTeam = $teams->firstWhere('id', $selectedTeamId);
@@ -83,7 +76,9 @@ class AttendanceStatisticsController extends Controller
         $clubId = session('current_club_id');
         $teamId = $request->input('team_id');
 
+        $accessibleTeamIds = $this->getAccessibleTeams($clubId)->pluck('id');
         $team = Team::where('club_id', $clubId)->findOrFail($teamId);
+        abort_unless($accessibleTeamIds->contains($team->id), 403);
 
         $pastEvents = Event::where('team_id', $team->id)
             ->where('club_id', $clubId)
@@ -124,5 +119,28 @@ class AttendanceStatisticsController extends Controller
             'Content-Type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    private function getAccessibleTeams(string $clubId)
+    {
+        $isClubAdmin = ClubMembership::where('club_id', $clubId)
+            ->where('user_id', auth()->id())
+            ->whereIn('role', ['owner', 'admin'])
+            ->where('status', 'active')
+            ->exists();
+
+        if ($isClubAdmin) {
+            return Team::where('club_id', $clubId)->orderBy('name')->get();
+        }
+
+        $myTeamIds = TeamMembership::where('user_id', auth()->id())
+            ->whereIn('role', ['head_coach', 'assistant_coach'])
+            ->where('status', 'active')
+            ->pluck('team_id');
+
+        return Team::where('club_id', $clubId)
+            ->whereIn('id', $myTeamIds)
+            ->orderBy('name')
+            ->get();
     }
 }

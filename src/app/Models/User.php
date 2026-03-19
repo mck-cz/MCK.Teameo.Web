@@ -26,8 +26,13 @@ class User extends Authenticatable
         'avatar_path',
         'address',
         'birth_date',
+        'sex',
         'is_minor',
         'can_self_manage',
+        'status',
+        'claimed_by',
+        'claimed_at',
+        'created_by_role',
         'locale',
         'notification_preferences',
     ];
@@ -46,6 +51,7 @@ class User extends Authenticatable
             'is_minor' => 'boolean',
             'can_self_manage' => 'boolean',
             'notification_preferences' => 'array',
+            'claimed_at' => 'datetime',
         ];
     }
 
@@ -97,6 +103,16 @@ class User extends Authenticatable
     public function teams(): BelongsToMany
     {
         return $this->belongsToMany(Team::class, 'team_memberships')->withPivot('role', 'status', 'position', 'joined_at');
+    }
+
+    /**
+     * Get IDs of children who are active members of a given club.
+     */
+    public function getChildrenIdsInClub(string $clubId): \Illuminate\Support\Collection
+    {
+        return $this->children()
+            ->whereHas('clubMemberships', fn ($q) => $q->where('club_id', $clubId)->where('status', 'active'))
+            ->pluck('users.id');
     }
 
     public function calendarFeeds(): HasMany

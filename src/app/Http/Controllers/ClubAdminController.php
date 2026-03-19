@@ -9,16 +9,26 @@ use Illuminate\Http\Request;
 
 class ClubAdminController extends Controller
 {
+    private function authorizeClubAdmin(): void
+    {
+        $clubId = session('current_club_id');
+        $exists = ClubMembership::where('club_id', $clubId)
+            ->where('user_id', auth()->id())
+            ->whereIn('role', ['owner', 'admin'])
+            ->where('status', 'active')
+            ->exists();
+        abort_unless($exists, 403);
+    }
+
     public function index()
     {
         $clubId = session('current_club_id');
         $club = Club::findOrFail($clubId);
+        $this->authorizeClubAdmin();
 
         $membership = ClubMembership::where('club_id', $clubId)
             ->where('user_id', auth()->id())
             ->first();
-
-        abort_unless($membership && in_array($membership->role, ['owner', 'admin']), 403);
 
         $members = ClubMembership::where('club_id', $clubId)
             ->with('user')
@@ -38,11 +48,7 @@ class ClubAdminController extends Controller
     {
         $clubId = session('current_club_id');
         $club = Club::findOrFail($clubId);
-
-        $membership = ClubMembership::where('club_id', $clubId)
-            ->where('user_id', auth()->id())
-            ->first();
-        abort_unless($membership && in_array($membership->role, ['owner', 'admin']), 403);
+        $this->authorizeClubAdmin();
 
         return view('club-admin.settings', compact('club'));
     }
@@ -51,11 +57,7 @@ class ClubAdminController extends Controller
     {
         $clubId = session('current_club_id');
         $club = Club::findOrFail($clubId);
-
-        $membership = ClubMembership::where('club_id', $clubId)
-            ->where('user_id', auth()->id())
-            ->first();
-        abort_unless($membership && in_array($membership->role, ['owner', 'admin']), 403);
+        $this->authorizeClubAdmin();
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -63,7 +65,16 @@ class ClubAdminController extends Controller
             'address' => 'nullable|string|max:500',
             'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'bank_account' => 'nullable|string|max:50',
+            'event_in_progress_minutes' => 'nullable|integer|min:0|max:1440',
         ]);
+
+        // Extract settings fields and merge into club settings JSON
+        $minutes = $validated['event_in_progress_minutes'] ?? 60;
+        unset($validated['event_in_progress_minutes']);
+
+        $settings = $club->settings ?? [];
+        $settings['event_in_progress_minutes'] = (int) $minutes;
+        $validated['settings'] = $settings;
 
         $club->update($validated);
 

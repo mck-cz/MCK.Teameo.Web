@@ -3,11 +3,11 @@
 @section('title', __('messages.payments.edit'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('payments.show', $paymentRequest) }}" class="text-sm text-muted hover:underline">
-            &larr; {{ __('messages.common.back') }}
-        </a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.payments.title'), 'href' => route('payments.index')],
+        ['label' => $paymentRequest->name, 'href' => route('payments.show', $paymentRequest)],
+        ['label' => __('messages.payments.edit')],
+    ]" />
 
     <h1 class="text-xl font-semibold mb-6">{{ __('messages.payments.edit') }}</h1>
 

@@ -7,7 +7,8 @@
         <div class="alert-success mb-4">{{ session('success') }}</div>
     @endif
 
-    <h1 class="text-xl font-semibold mb-6">{{ __('messages.calendar_feeds.title') }}</h1>
+    <h1 class="text-xl font-semibold mb-2">{{ __('messages.calendar_feeds.title') }}</h1>
+    <p class="text-sm text-muted mb-6">{{ __('messages.calendar_feeds.description') }}</p>
 
     {{-- Existing feeds --}}
     @forelse($feeds as $feed)

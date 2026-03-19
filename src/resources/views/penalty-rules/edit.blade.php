@@ -3,9 +3,10 @@
 @section('title', __('messages.penalties.edit'))
 
 @section('content')
-    <div class="mb-6">
-        <a href="{{ route('penalty-rules.index') }}" class="text-sm text-muted hover:underline">&larr; {{ __('messages.common.back') }}</a>
-    </div>
+    <x-breadcrumb :items="[
+        ['label' => __('messages.penalties.title'), 'href' => route('penalty-rules.index')],
+        ['label' => __('messages.penalties.edit')],
+    ]" />
 
     <h1 class="text-xl font-semibold mb-6">{{ __('messages.penalties.edit') }}</h1>
 
